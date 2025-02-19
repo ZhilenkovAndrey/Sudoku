@@ -14,6 +14,7 @@ var (
 	ErrDigitSquare = errors.New("В квадрате есть такая цифра.")
 	ErrDigitLine   = errors.New("В линии есть такая цифра")
 	ErrDigitСolumn = errors.New("в столбце есть такая цифра")
+	ErrDigitFix    = errors.New("Эта кцифра неизменяема")
 )
 
 type cell struct {
@@ -23,15 +24,13 @@ type cell struct {
 
 type greed [height][width]cell
 
-func newSudoku(greed1 [width][height]int) *greed { //Заполнение поля сверху вниз, слева на право массивом greed1
+func newSudoku(greed1 [width][height]int) *greed { //Заполнение поля сверху массивом greed1
 	var greed2 greed
-	for i := 1; i < width; i++ {
-		for j := 1; j < height; j++ {
-			a := greed1[i][j]
-			if a != 0 {
-				greed2[i][j].number = a
-				// greed2[i][j].fix = true
-			}
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
+			greed2[i][j].number = greed1[i][j]
+			greed2[i][j].x = i
+			greed2[i][j].y = j
 		}
 	}
 	return &greed2
@@ -52,13 +51,21 @@ func fieldInitial() *greed { // Заполнение поля вручную м�
 	})
 }
 
-func fixedField(g *greed) { //Делает все значения не равные нулю неизменяемыми
-	for i := 1; i < width; i++ {
-		for j := 1; j < height; j++ {
+func (g greed) fixedField() *greed { //Делает все значения не равные нулю неизменяемыми
+
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
 			if g[i][j].number != 0 {
 				g[i][j].fix = true
 			}
 		}
+	}
+	return &g
+}
+
+func (g *greed) printField() {
+	for i := 0; i < width; i++ {
+		Println(g[i])
 	}
 }
 
@@ -106,11 +113,18 @@ func (g *greed) cellColumnChecking(c cell) bool { //Проверка верти�
 	return d
 }
 
-func (g *greed) cellNotFix(c cell) bool {
-	return g[c.x][c.y].fix
+func (g *greed) cellNotFix(c cell) bool { //Проверка заполняемой клетки на изменяемость
+	var d bool
+	if g[c.x][c.y].fix == true {
+		d = false
+		Println(ErrDigitFix)
+	} else {
+		d = true
+	}
+	return d
 }
 
-func (g *greed) addDigit(c cell) {
+func (g *greed) addDigit(c cell) { //Проверка возможности установки новой цифры в клетке
 	if g.cellDigitChecking(c) && g.cellLineChecking(c) && g.cellColumnChecking(c) && g.cellNotFix(c) {
 		g[c.x][c.y].number = c.number
 	}
@@ -118,22 +132,5 @@ func (g *greed) addDigit(c cell) {
 }
 
 func main() {
-	Print(fixedField(fieldInitial()))
+	fieldInitial().fixedField().printField()
 }
-
-// func(c cell) cellFiling(i, j int, g greed) {
-//     c.number = rand.Intn(10)
-// 		    if cellChecking(c.number) {
-//                 g[i][j] = c.number
-// 			} else {
-// 				cellFiling
-// 			}
-// }
-
-// func(g *greed) sudokuBuilding() {
-//     for i := 1; i <= width; i++ {
-//         for j := 1; j <= height; j++ {
-// 		     cellFiling(i, j, g)
-// 		}
-// 	}
-// }
