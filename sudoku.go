@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	. "fmt"
+	"strconv"
 )
 
 const (
@@ -15,14 +16,15 @@ var (
 	ErrDigitLine   = errors.New("В линии есть такая цифра")
 	ErrDigitСolumn = errors.New("в столбце есть такая цифра")
 	ErrDigitFix    = errors.New("Эта кцифра неизменяема")
+	ErrCoordinates = errors.New("Вы ввели недопустимые координаты")
 )
 
-type cell struct {
+type cell struct { //Клетка
 	x, y, number int
 	fix          bool
 }
 
-type greed [height][width]cell
+type greed [height][width]cell //Сетка клеток
 
 func newSudoku(greed1 [width][height]int) *greed { //Заполнение поля сверху массивом greed1
 	var greed2 greed
@@ -63,7 +65,7 @@ func (g greed) fixedField() *greed { //Делает все значения не
 	return &g
 }
 
-func (g *greed) printField() {
+func (g *greed) printField() { //Печать поля
 	for i := 0; i < width; i++ {
 		Println(g[i])
 	}
@@ -124,13 +126,48 @@ func (g *greed) cellNotFix(c cell) bool { //Проверка заполняем�
 	return d
 }
 
-func (g *greed) addDigit(c cell) { //Проверка возможности установки новой цифры в клетке
+func (g *greed) checkNumber(c cell) { //Проверка возможности установки новой цифры в клетке
 	if g.cellDigitChecking(c) && g.cellLineChecking(c) && g.cellColumnChecking(c) && g.cellNotFix(c) {
 		g[c.x][c.y].number = c.number
 	}
 
 }
 
+// func enterNumber(c cell) {
+// 	var x, y, number string
+// 	Println(" Введите поочередно (от 1 до 9) координату цифры по оси Х, по оси У и (от 1 до 9) саму цифру:")
+// 	Scan(&x)
+// 	Scan(&y)
+// 	Scan(&number)
+// 	parseIntCoordinates(x)
+// 	parseIntCoordinates(y)
+
+// }
+
+func enterNumberXCoordinate() int { //Ввод с клавиатуры координаты Х изменяемой цифры
+	var x string
+	Print(" Введите координату (1-9) числа по горизонтали: ")
+	Scan(&x)
+	return parseIntCoordinates(enterNumberXCoordinate, x)
+}
+
+func enterNumberYCoordinate() int { //Ввод с клавиатуры координаты У изменяемой цифры
+	var y string
+	Print(" Введите координату (1-9) числа по вертикали: ")
+	Scan(&y)
+	return parseIntCoordinates(enterNumberYCoordinate, y)
+}
+
+func parseIntCoordinates(f func() int, s string) int { //Проверка и парсинг вводимых координеат цифры
+	a, err := strconv.Atoi(s)
+	if err != nil || a < 1 || a > 9 {
+		Println(ErrCoordinates)
+		f()
+	}
+	return a
+}
+
 func main() {
-	fieldInitial().fixedField().printField()
+	a := fieldInitial().fixedField()
+	a.printField()
 }
