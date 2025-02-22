@@ -161,7 +161,7 @@ func parseIntDigit(f func() int, s string) int { //Проверка и парс�
 	return a
 }
 
-func start() cell { //Создаем клетку
+func cellChange() cell { //Создаем клетку
 	var c cell
 	c.x = enterNumberXCoordinate()
 	c.y = enterNumberYCoordinate()
@@ -180,9 +180,13 @@ func (g *greed) greedAddCell(f func() cell) *greed { //Устанавливае�
 	return g
 }
 
-func main() {
+func start() {
 	a := fieldInitial().fixedField()
 	a.printField()
-	a.greedAddCell(start)
+	a.greedAddCell(cellChange)
 	a.printField()
+}
+
+func main() {
+	start()
 }
