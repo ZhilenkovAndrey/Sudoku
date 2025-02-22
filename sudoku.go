@@ -1,6 +1,7 @@
 package main
 
 import (
+	// "numberReader"
 	"errors"
 	. "fmt"
 	"strconv"
@@ -12,11 +13,11 @@ const (
 )
 
 var (
-	ErrDigitSquare = errors.New("В квадрате есть такая цифра.")
-	ErrDigitLine   = errors.New("В линии есть такая цифра")
-	ErrDigitСolumn = errors.New("в столбце есть такая цифра")
-	ErrDigitFix    = errors.New("Эта кцифра неизменяема")
-	ErrCoordinates = errors.New("Вы ввели недопустимые координаты")
+	ErrDigitSquare = errors.New(" В квадрате есть такая цифра")
+	ErrDigitLine   = errors.New(" В линии есть такая цифра")
+	ErrDigitСolumn = errors.New(" в столбце есть такая цифра")
+	ErrDigitFix    = errors.New(" Эта клетка неизменяема")
+	ErrParameters  = errors.New(" Вы ввели недопустимые параметры")
 )
 
 type cell struct { //Клетка
@@ -24,7 +25,7 @@ type cell struct { //Клетка
 	fix          bool
 }
 
-type greed [height][width]cell //Сетка клеток
+type greed [width][height]cell //Сетка клеток
 
 func newSudoku(greed1 [width][height]int) *greed { //Заполнение поля сверху массивом greed1
 	var greed2 greed
@@ -76,9 +77,9 @@ func (g *greed) cellDigitChecking(c cell) bool { //Проверка квадра
 	var d bool
 	a = c.x / 3
 	b = c.y / 3
-	for i := 1; i <= 3; i++ {
-		for j := 1; j <= 3; j++ {
-			if c.number != g[a*3+i][b*3+j].number && c.x != i && c.y != j {
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			if c.number != g[a*3+i][b*3+j].number {
 				d = true
 			} else {
 				Println(ErrDigitSquare)
@@ -117,7 +118,7 @@ func (g *greed) cellColumnChecking(c cell) bool { //Проверка верти�
 
 func (g *greed) cellNotFix(c cell) bool { //Проверка заполняемой клетки на изменяемость
 	var d bool
-	if g[c.x][c.y].fix == true {
+	if g[c.x][c.y].fix {
 		d = false
 		Println(ErrDigitFix)
 	} else {
@@ -126,48 +127,62 @@ func (g *greed) cellNotFix(c cell) bool { //Проверка заполняем�
 	return d
 }
 
-func (g *greed) checkNumber(c cell) { //Проверка возможности установки новой цифры в клетке
-	if g.cellDigitChecking(c) && g.cellLineChecking(c) && g.cellColumnChecking(c) && g.cellNotFix(c) {
-		g[c.x][c.y].number = c.number
-	}
-
+func (g *greed) checkNumber(c cell) bool { //Проверка возможности установки новой цифры в клетке
+	return (g.cellDigitChecking(c) && g.cellLineChecking(c) && g.cellColumnChecking(c) && g.cellNotFix(c))
 }
-
-// func enterNumber(c cell) {
-// 	var x, y, number string
-// 	Println(" Введите поочередно (от 1 до 9) координату цифры по оси Х, по оси У и (от 1 до 9) саму цифру:")
-// 	Scan(&x)
-// 	Scan(&y)
-// 	Scan(&number)
-// 	parseIntCoordinates(x)
-// 	parseIntCoordinates(y)
-
-// }
 
 func enterNumberXCoordinate() int { //Ввод с клавиатуры координаты Х изменяемой цифры
 	var x string
 	Print(" Введите координату (1-9) числа по горизонтали: ")
 	Scan(&x)
-	return parseIntCoordinates(enterNumberXCoordinate, x)
+	return (parseIntDigit(enterNumberXCoordinate, x) - 1)
 }
 
 func enterNumberYCoordinate() int { //Ввод с клавиатуры координаты У изменяемой цифры
 	var y string
 	Print(" Введите координату (1-9) числа по вертикали: ")
 	Scan(&y)
-	return parseIntCoordinates(enterNumberYCoordinate, y)
+	return (parseIntDigit(enterNumberYCoordinate, y) - 1)
 }
 
-func parseIntCoordinates(f func() int, s string) int { //Проверка и парсинг вводимых координеат цифры
+func enterNumber() int {
+	var number string
+	Print(" Введите цифру: ")
+	Scan(&number)
+	return parseIntDigit(enterNumber, number)
+}
+
+func parseIntDigit(f func() int, s string) int { //Проверка и парсинг вводимых параметров цифры
 	a, err := strconv.Atoi(s)
 	if err != nil || a < 1 || a > 9 {
-		Println(ErrCoordinates)
-		f()
+		Println(ErrParameters)
+		a = f()
 	}
 	return a
 }
 
+func start() cell { //Создаем клетку
+	var c cell
+	c.x = enterNumberXCoordinate()
+	c.y = enterNumberYCoordinate()
+	c.number = enterNumber()
+	Println(c)
+	return c
+}
+
+func (g *greed) greedAddCell(f func() cell) *greed { //Устанавливаем клетку на поле
+	c := f()
+	if g.checkNumber(c) {
+		g[c.x][c.y].number = c.number
+	} else {
+		g.greedAddCell(f)
+	}
+	return g
+}
+
 func main() {
 	a := fieldInitial().fixedField()
+	a.printField()
+	a.greedAddCell(start)
 	a.printField()
 }
